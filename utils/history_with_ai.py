@@ -1,23 +1,25 @@
 import streamlit as st
 import json
 import openai
-from docx import Document
 import time
 import random
 from utils.session_management import collect_session_data
 from utils.firebase_operations import upload_to_firebase
 
-def read_croup_doc():
-    doc = Document("croup.docx")
+def read_croup_txt():
     croup_info = {}
-    for para in doc.paragraphs:
-        if ':' in para.text:
-            question, answer = para.text.split(':', 1)
-            croup_info[question.strip().lower()] = answer.strip().lower()
+    with open("croup.txt", "r") as file:
+        content = file.read().strip().split("\n\n")  # Split by double newlines (space)
+        for block in content:
+            lines = block.strip().split("\n")
+            if len(lines) >= 2:
+                question = lines[0].split("Q: ", 1)[1].strip().lower()  # Get question
+                answer = lines[1].split("A: ", 1)[1].strip().lower()    # Get answer
+                croup_info[question] = answer
     return croup_info
 
 # Load the document content
-croup_info = read_croup_doc()
+croup_info = read_croup_txt()
 
 def get_chatgpt_response(user_input):
     user_input_lower = user_input.lower()
@@ -31,16 +33,11 @@ def get_chatgpt_response(user_input):
 
     if user_input_lower in croup_info:
         answer = croup_info[user_input_lower]
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "user", "content": user_input},
-                {"role": "assistant", "content": f"The answer is: {answer}"}
-            ]
-        )
-        return response['choices'][0]['message']['content']
+        # Return the answer directly without calling the API
+        return answer
     else:
         return random.choice(alternative_responses)
+
 
 def load_existing_data(db, document_id):
     """Load existing questions and responses from Firebase."""
@@ -154,4 +151,5 @@ def run_virtual_patient(db, document_id):
 
 if __name__ == '__main__':
     run_virtual_patient(db, document_id)
+
 
