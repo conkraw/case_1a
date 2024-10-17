@@ -32,12 +32,9 @@ def get_chatgpt_response(user_input):
     ]
 
     if user_input_lower in croup_info:
-        answer = croup_info[user_input_lower]
-        # Return the answer directly without calling the API
-        return answer
+        return croup_info[user_input_lower]
     else:
         return random.choice(alternative_responses)
-
 
 def load_existing_data(db, document_id):
     """Load existing questions and responses from Firebase."""
@@ -100,34 +97,24 @@ def run_virtual_patient(db, document_id):
     elapsed_time = (time.time() - st.session_state.start_time) / 60
 
     if elapsed_time < 15:
-        with st.form("question_form", clear_on_submit=True):
-            user_input = st.text_input("Ask the virtual patient typical history questions you would want to know for this case:")
-            submit_button = st.form_submit_button("Ask")
+        search_input = st.text_input("Enter part of a question:")
 
-            if submit_button and user_input:
-                # Process the user input
-                st.session_state.session_data['questions_asked'].append(user_input)
+        if search_input:
+            matching_questions = [q for q in croup_info.keys() if search_input.lower() in q]
 
-                virtual_patient_response = get_chatgpt_response(user_input)
-                st.session_state.session_data['responses'].append(virtual_patient_response)
-
-                # Clear the input field
-                st.rerun()
-
-                # Display the new response
-                st.write(f"Virtual Patient: {virtual_patient_response}")
-
-                # Collect session data and prepare for upload to Firebase
-                entry = collect_session_data()  # Collect session data
-                entry['questions_asked'] = st.session_state.session_data['questions_asked']
-                entry['responses'] = st.session_state.session_data['responses']  # Include responses
-
-                # Upload to Firebase
-                try:
-                    upload_message = upload_to_firebase(db, document_id, entry)
-                    st.success("Your questions have been saved successfully.")
-                except Exception as e:
-                    st.error(f"Error uploading data: {e}")
+            if matching_questions:
+                st.write("**Select a question:**")
+                for question in matching_questions:
+                    button_key = f"select_{question.replace(' ', '_')}"
+                    if st.button(question, key=button_key):
+                        st.session_state.session_data['questions_asked'].append(question)
+                        virtual_patient_response = get_chatgpt_response(question)
+                        st.session_state.session_data['responses'].append(virtual_patient_response)
+                        st.write(f"Virtual Patient: {virtual_patient_response}")
+                        # Clear the input field and rerun the session
+                        st.rerun()
+            else:
+                st.warning("No matching questions found. Please try a different search.")
 
     else:
         st.warning("Session time is up. Please end the session.")
@@ -151,5 +138,6 @@ def run_virtual_patient(db, document_id):
 
 if __name__ == '__main__':
     run_virtual_patient(db, document_id)
+
 
 
