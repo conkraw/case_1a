@@ -43,7 +43,7 @@ def remove_duplicates(questions, responses):
 
     return unique_questions, unique_responses
 
-def get_chatgpt_response(user_input):
+def get_chatgpt_response(user_input, croup_info):
     user_input_lower = user_input.lower()
     
     alternative_responses = [
@@ -58,7 +58,7 @@ def get_chatgpt_response(user_input):
     else:
         return random.choice(alternative_responses)
 
-def run_virtual_patient(db, document_id):
+def run_virtual_patient(db, document_id, croup_info):
     st.title("Virtual Patient")
 
     st.info(
@@ -107,7 +107,7 @@ def run_virtual_patient(db, document_id):
                 for question in matching_questions:
                     if st.button(question):
                         st.session_state.session_data['questions_asked'].append(question)
-                        virtual_patient_response = get_chatgpt_response(question)
+                        virtual_patient_response = get_chatgpt_response(question, croup_info)
                         st.session_state.session_data['responses'].append(virtual_patient_response)
                         st.write(f"Virtual Patient: {virtual_patient_response}")
                         # Clear the input field
@@ -137,6 +137,8 @@ def run_virtual_patient(db, document_id):
         st.rerun()
 
 if __name__ == '__main__':
-    run_virtual_patient(db, document_id)
+    croup_info, available_questions = read_croup_txt()  # Load croup info
+    run_virtual_patient(db, document_id, croup_info)
+
 
 
