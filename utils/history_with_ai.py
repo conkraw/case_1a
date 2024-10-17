@@ -20,8 +20,28 @@ def read_croup_txt():
                 questions.append(question)
     return croup_info, questions
 
-# Load the document content
-croup_info, available_questions = read_croup_txt()
+def load_existing_data(db, document_id):
+    """Load existing questions and responses from Firebase."""
+    collection_name = st.secrets["FIREBASE_COLLECTION_NAME"]
+    user_data = db.collection(collection_name).document(document_id).get()
+    
+    if user_data.exists:
+        return user_data.to_dict().get("questions_asked", []), user_data.to_dict().get("responses", [])
+    return [], []
+
+def remove_duplicates(questions, responses):
+    """Remove duplicates from questions and responses."""
+    unique_questions = []
+    unique_responses = []
+    seen = set()
+
+    for question, response in zip(questions, responses):
+        if question not in seen:
+            unique_questions.append(question)
+            unique_responses.append(response)
+            seen.add(question)
+
+    return unique_questions, unique_responses
 
 def get_chatgpt_response(user_input):
     user_input_lower = user_input.lower()
@@ -80,7 +100,7 @@ def run_virtual_patient(db, document_id):
         
         if user_input:
             # Find matching questions
-            matching_questions = [q for q in available_questions if user_input.lower() in q]
+            matching_questions = [q for q in croup_info.keys() if user_input.lower() in q]
 
             if matching_questions:
                 st.write("Select a question:")
