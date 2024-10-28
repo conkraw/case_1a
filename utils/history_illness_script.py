@@ -113,7 +113,7 @@ def main(db, document_id):
                             index_to_change = st.session_state.diagnoses.index(change_diagnosis)
                             st.session_state.diagnoses[index_to_change] = option
                             st.session_state.diagnoses_s2 = [dx for dx in st.session_state.diagnoses if dx]
-                            st.rerun()  # Rerun to reflect changes
+                            st.rerun()  
 
         st.session_state.diagnoses_s2 = [dx for dx in st.session_state.diagnoses if dx]
 
@@ -147,22 +147,26 @@ def main(db, document_id):
                         for option in filtered_options:
                             if st.button(option, key=f"button_{i}_{option}"):
                                 st.session_state.historical_features[i] = option  # Set selected feature
-                                # Don't rerun the entire app; just refresh the input field
-                                st.session_state.historical_features[i] = option
+                                # Clear suggestions once an option is selected
+                                filtered_options = []
 
-            # Show dropdown for hxfeature if historical feature is not empty
-            if st.session_state.historical_features[i]:
-                # Render the dropdown with historical feature
-                dropdown_value = st.session_state.dropdown_defaults.get(diagnosis, [""] * 5)[i]
-                st.selectbox(
-                    "hxfeatures for " + diagnosis,
-                    options=["", "Supports", "Does not support"],
-                    index=["", "Supports", "Does not support"].index(dropdown_value),
-                    key=f"select_{i}_{diagnosis}_hist",
-                    label_visibility="collapsed"
-                )
-            else:
-                st.write("Current Feature:", st.session_state.historical_features[i])
+            for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
+                with col:
+                    # Safely retrieve the dropdown default value
+                    dropdown_value = st.session_state.dropdown_defaults.get(diagnosis, [""] * 5)[i]
+                    if dropdown_value in ["", "Supports", "Does not support"]:
+                        index = ["", "Supports", "Does not support"].index(dropdown_value)
+                    else:
+                        index = 0  
+
+                    # Render the dropdown with the correct index selected
+                    st.selectbox(
+                        "hxfeatures for " + diagnosis,
+                        options=["", "Supports", "Does not support"],
+                        index=index,
+                        key=f"select_{i}_{diagnosis}_hist",
+                        label_visibility="collapsed"
+                    )
 
         # Submit button for historical features
         if st.button("Submit", key="hx_features_submit_button"):
