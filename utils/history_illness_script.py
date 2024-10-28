@@ -149,13 +149,15 @@ def main(db, document_id):
                     if filtered_options:
                         st.write("**Suggestions:**")
                         for option in filtered_options:
-                            # Only show button if the feature is not already selected
+                            # Show button only if the feature is not already selected
                             if st.session_state.selected_historical_features[i] == "":
                                 if st.button(option, key=f"button_{i}_{option}"):
                                     st.session_state.historical_features[i] = option  # Set selected feature
                                     st.session_state.selected_historical_features[i] = option  # Mark as selected
+                                    # Clear the input field after selection
+                                    st.session_state.historical_features[i] = option
         
-                # Show selected feature
+                # Check if a feature has been selected
                 if st.session_state.selected_historical_features[i] != "":
                     st.write(f"**Current Feature:** {st.session_state.selected_historical_features[i]}")
                 else:
@@ -171,6 +173,7 @@ def main(db, document_id):
                                 key=f"select_{i}_{diagnosis}_hist",
                                 label_visibility="collapsed"
                             )
+
 
         # Submit button for historical features
         if st.button("Submit", key="hx_features_submit_button"):
