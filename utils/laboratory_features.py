@@ -102,15 +102,15 @@ def display_laboratory_features(db, document_id):
         if new_diagnosis_search:
             dx_options = read_diagnoses_from_file()  # Re-read the diagnoses options
             new_filtered_options = [dx for dx in dx_options if new_diagnosis_search.lower() in dx.lower() and dx not in st.session_state.diagnoses]
-                if new_filtered_options:
-                    st.write("**Available Options:**")
-                    for option in new_filtered_options:
-                        if st.button(f"{option}", key=f"select_new_{option}"):
-                            index_to_change = st.session_state.diagnoses.index(change_diagnosis)
-                            st.session_state.diagnoses[index_to_change] = option
-                            # Update diagnoses_s2 here as well
-                            st.session_state.diagnoses_s7 = [dx for dx in st.session_state.diagnoses if dx]  # Update diagnoses_s2
-                            st.rerun()  
+            if new_filtered_options:
+                st.write("**Available Options:**")
+                for option in new_filtered_options:
+                    if st.button(f"{option}", key=f"select_new_{option}"):
+                        index_to_change = st.session_state.diagnoses.index(change_diagnosis)
+                        st.session_state.diagnoses[index_to_change] = option
+                        # Update diagnoses_s2 here as well
+                        st.session_state.diagnoses_s7 = [dx for dx in st.session_state.diagnoses if dx]  # Update diagnoses_s2
+                        st.rerun()  
         st.session_state.diagnoses_s7 = [dx for dx in st.session_state.diagnoses if dx]
         
     # Display laboratory features
