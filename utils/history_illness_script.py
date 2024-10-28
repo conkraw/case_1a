@@ -161,7 +161,7 @@ def main(db, document_id):
         
                 # Display the current feature or render dropdowns
                 if st.session_state.selected_historical_features[i]:
-                    st.write(f"**** {st.session_state.selected_historical_features[i]}")
+                    st.write("")
                 else:
                     # Render the dropdown for historical features if no selection
                     for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
