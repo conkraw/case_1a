@@ -130,7 +130,7 @@ def display_physical_examination_features(db, document_id):
                 key=f"phys_row_{i}",
                 label_visibility="collapsed"
             )
-                st.session_state.physical_examination_features[i] = physical_examination_input.strip()
+            st.session_state.physical_examination_features[i] = physical_examination_input.strip()
 
                 if physical_examination_input:
                     available_features = read_physical_features_from_file()
