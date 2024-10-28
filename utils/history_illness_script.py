@@ -142,22 +142,33 @@ def main(db, document_id):
                 )
 
                 # Show buttons if there is input in the search field
-                if historical_feature_input:
-                    available_features = read_historical_features_from_file()
-                    matches = [feature for feature in available_features if historical_feature_input.lower() in feature.lower()]
+                #if historical_feature_input:
+                #    available_features = read_historical_features_from_file()
+                #    matches = [feature for feature in available_features if historical_feature_input.lower() in feature.lower()]
                     #if matches:
                     #    for match in matches:
                     #        if st.button(match, key=f"button_{i}_{match}"):
                     #            st.session_state.historical_features[i] = match  # Set selected feature
                     #            st.rerun()  # Rerun to refresh the app state
+                #    if matches:
+                #        for match in matches:
+                #            # Only show the button if it hasn't been selected yet
+                #            if match != st.session_state.historical_features[i]:
+                #                if st.button(match, key=f"button_{i}_{match}"):
+                #                    st.session_state.historical_features[i] = match  # Set selected feature
+                #                    st.rerun()  # Rerun to refresh the app state
+                if historical_feature_input:
+                    available_features = read_historical_features_from_file()
+                    matches = [feature for feature in available_features if historical_feature_input.lower() in feature.lower()]
+                    selected_features = set(st.session_state.historical_features)  # Get already selected features
+                
                     if matches:
                         for match in matches:
-                            # Only show the button if it hasn't been selected yet
-                            if match != st.session_state.historical_features[i]:
+                            # Show the button only if it hasn't been selected yet
+                            if match not in selected_features:
                                 if st.button(match, key=f"button_{i}_{match}"):
                                     st.session_state.historical_features[i] = match  # Set selected feature
-                                    st.rerun()  # Rerun to refresh the app state
-
+                                    st.rerun() 
             for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
                 with col:
                     # Safely retrieve the dropdown default value
