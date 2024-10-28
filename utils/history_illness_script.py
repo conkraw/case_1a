@@ -140,28 +140,29 @@ def main(db, document_id):
                 # Store selected option
                 if 'selected_historical_features' not in st.session_state:
                     st.session_state.selected_historical_features = [""] * 5
-                
+        
                 # If user provides input, search in hx_f.txt
+                filtered_options = []
                 if historical_input:
                     all_features = read_historical_features_from_file()
                     filtered_options = [feature for feature in all_features if historical_input.lower() in feature.lower()]
         
-                    if filtered_options:
-                        st.write("**Suggestions:**")
-                        for option in filtered_options:
-                            # Show button only if the feature is not already selected
-                            if st.session_state.selected_historical_features[i] == "":
-                                if st.button(option, key=f"button_{i}_{option}"):
-                                    st.session_state.historical_features[i] = option  # Set selected feature
-                                    st.session_state.selected_historical_features[i] = option  # Mark as selected
-                                    # Clear the input field after selection
-                                    st.session_state.historical_features[i] = option
+                # Display suggestions if there are filtered options
+                if filtered_options:
+                    st.write("**Suggestions:**")
+                    for option in filtered_options:
+                        # Show button only if the feature is not already selected
+                        if st.session_state.selected_historical_features[i] == "":
+                            if st.button(option, key=f"button_{i}_{option}"):
+                                # Set selected feature and clear input
+                                st.session_state.historical_features[i] = option
+                                st.session_state.selected_historical_features[i] = option
         
-                # Check if a feature has been selected
-                if st.session_state.selected_historical_features[i] != "":
+                # Show the current selected feature if it exists
+                if st.session_state.selected_historical_features[i]:
                     st.write(f"**Current Feature:** {st.session_state.selected_historical_features[i]}")
                 else:
-                    # Render the dropdown for historical features if no selection
+                    # Render the dropdown for historical features
                     for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
                         with col:
                             dropdown_value = st.session_state.dropdown_defaults.get(diagnosis, [""] * 5)[i]
@@ -173,7 +174,6 @@ def main(db, document_id):
                                 key=f"select_{i}_{diagnosis}_hist",
                                 label_visibility="collapsed"
                             )
-
 
         # Submit button for historical features
         if st.button("Submit", key="hx_features_submit_button"):
