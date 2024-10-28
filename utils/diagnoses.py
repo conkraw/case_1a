@@ -30,9 +30,9 @@ def display_diagnoses(db, document_id):
         with col:
             current_diagnosis = st.session_state.diagnoses[i]
             search_input = st.text_input(f"Diagnosis # {i + 1}", value=current_diagnosis, key=f"diagnosis_search_{i}")
-
+    
             filtered_options = [dx for dx in dx_options if search_input.lower() in dx.lower()] if search_input else []
-
+    
             if filtered_options:
                 st.write("**Suggestions:**")
                 for option in filtered_options[:5]:
@@ -40,7 +40,13 @@ def display_diagnoses(db, document_id):
                     if st.button(f"{option}", key=button_key):
                         st.session_state.diagnoses[i] = option
                         st.rerun()
-
+    
+            # Handle deletion of a diagnosis
+            if search_input == "" and current_diagnosis:
+                st.session_state.diagnoses[i] = ""  # Clear the diagnosis in session state
+                current_diagnosis = ""  # Update local variable to reflect the cleared state
+    
+            # Check if current diagnosis is now empty
             if current_diagnosis:
                 st.write(f"**Selected:** {current_diagnosis}")
 
