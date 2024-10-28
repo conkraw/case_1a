@@ -188,10 +188,9 @@ def main(db, document_id):
                         label_visibility="collapsed"
                     )
 
-        # Submit button for historical features
         if st.button("Submit", key="hx_features_submit_button"):
             # Check if at least one historical feature is filled
-            if not any(feature for feature in st.session_state.historical_features):  
+            if not any(feature.strip() for feature in st.session_state.historical_features):  
                 st.error("Please enter at least one historical feature to proceed.")
             else:
                 # Proceed with collecting and uploading data
@@ -213,5 +212,6 @@ def main(db, document_id):
                 session_data = collect_session_data()  # Collect session data
                 upload_message = upload_to_firebase(db, document_id, entry)
                 st.success("Historical features submitted successfully.")
+                s#t.session_state.current_page = "Next Page"  # Change this to the next page
                 st.rerun()  # Rerun to update the app
 
