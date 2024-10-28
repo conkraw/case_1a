@@ -12,6 +12,16 @@ def read_diagnoses_from_file():
         st.error(f"Error reading dx_list.txt: {e}")
         return []
 
+# Function to read laboratory features from a file
+def read_laboratory_features_from_file():
+    try:
+        with open('lab_f.txt', 'r') as file:  # Adjust file name as needed
+            features = [line.strip() for line in file.readlines() if line.strip()]
+        return features
+    except Exception as e:
+        st.error(f"Error reading lab_features.txt: {e}")
+        return []
+
 def load_laboratory_features(db, document_id):
     """Load existing laboratory features and diagnoses from Firebase."""
     collection_name = st.secrets["FIREBASE_COLLECTION_NAME"]
@@ -40,19 +50,24 @@ def display_laboratory_features(db, document_id):
         st.session_state.current_page = "laboratory_features"
     if 'diagnoses' not in st.session_state:
         st.session_state.diagnoses = [""] * 5
+    if 'diagnoses_s7' not in st.session_state:  
+        st.session_state.diagnoses_s7 = [""] * 5  
     if 'laboratory_features' not in st.session_state:
         st.session_state.laboratory_features, st.session_state.dropdown_defaults, st.session_state.diagnoses_s7 = load_laboratory_features(db, document_id)
+    if 'selected_buttons' not in st.session_state:
+        st.session_state.selected_buttons = [False] * 5  
     if 'selected_moving_diagnosis' not in st.session_state:
         st.session_state.selected_moving_diagnosis = ""  
 
-    # Load diagnoses from file
+    # Load diagnoses and laboratory features from files
     dx_options = read_diagnoses_from_file()
+    lab_feature_options = read_laboratory_features_from_file()
     dx_options.insert(0, "")  
 
     st.title("Laboratory Features Illness Script")
     st.markdown("""
             ### Laboratory Features
-            Please provide up to 5 historical features that influence the differential diagnosis.
+            Please provide up to 5 laboratory features that influence the differential diagnosis.
         """)
 
     # Reorder section in the sidebar
@@ -112,13 +127,22 @@ def display_laboratory_features(db, document_id):
     for i in range(5):
         cols = st.columns(len(st.session_state.diagnoses) + 1)
         with cols[0]:
-            # Prefill with existing values from session state
-            st.session_state.laboratory_features[i] = st.text_input(
-                f"Feature {i + 1}",
-                value=st.session_state.laboratory_features[i],  # Prefill with existing value
-                key=f"lab_row_{i}",
+            # Search for laboratory feature input
+            feature_search_input = st.text_input(
+                f"Search for Feature {i + 1}",
+                value=st.session_state.laboratory_features[i],
+                key=f"lab_search_{i}",
                 label_visibility="collapsed"
             )
+
+            # Show matching buttons for laboratory features
+            if feature_search_input:
+                matches = [feature for feature in lab_feature_options if feature_search_input.lower() in feature.lower()]
+                if matches:
+                    for match in matches:
+                        if st.button(match, key=f"button_{i}_{match}"):
+                            st.session_state.laboratory_features[i] = match
+                            st.rerun()  # Rerun to refresh the app state
 
         for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
             with col:
@@ -165,3 +189,8 @@ def display_laboratory_features(db, document_id):
             st.session_state.page = "Simple Success"  # Change to the next page
             st.success("Laboratory features submitted successfully.")
             st.rerun()  # Rerun to update the app
+
+# Call the function to run the app
+# This would normally be placed in your main entry point
+# display_laboratory_features(db, document_id)
+
