@@ -187,7 +187,8 @@ def main(db, document_id):
                         key=f"select_{i}_{diagnosis}_hist",
                         label_visibility="collapsed"
                     )
-
+        
+        # Submit button for historical features
         if st.button("Submit", key="hx_features_submit_button"):
             # Check if at least one historical feature is filled
             if not any(feature.strip() for feature in st.session_state.historical_features):  
@@ -205,13 +206,12 @@ def main(db, document_id):
                         if diagnosis not in entry['hxfeatures']:
                             entry['hxfeatures'][diagnosis] = []
                         entry['hxfeatures'][diagnosis].append({
-                            'historical_feature': st.session_state.historical_features[i],
+                            'historical_feature': st.session_state.historical_features[i].strip(),  # Ensure no leading/trailing spaces
                             'hxfeature': hxfeature
                         })
         
                 session_data = collect_session_data()  # Collect session data
                 upload_message = upload_to_firebase(db, document_id, entry)
-                st.session_state.page = "Physical Examination Features" 
                 st.success("Historical features submitted successfully.")
+                st.session_state.current_page = "Next Page"  # Change this to the next page
                 st.rerun()  # Rerun to update the app
-
