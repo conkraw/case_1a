@@ -215,8 +215,3 @@ def main(db, document_id):
                 st.session_state.page = "Physical Examination Features"  # Change this to the next page
                 st.success("Historical features submitted successfully.")
                 st.rerun()  # Rerun to update the app
-
-                    
-                    st.session_state.page = "Physical Examination Features"  # Change to the Simple Success page
-                    st.success("Historical features submitted successfully.")
-                    st.rerun()  # Rerun to update the app
