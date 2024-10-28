@@ -130,7 +130,20 @@ def display_physical_examination_features(db, document_id):
                 key=f"phys_row_{i}",
                 label_visibility="collapsed"
             )
+                st.session_state.physical_examination_features[i] = physical_examination_input.strip()
 
+                if physical_examination_input:
+                    available_features = read_physical_features_from_file()
+                    matches = [feature for feature in available_features if physical_examination_input.lower() in feature.lower()]
+                    selected_features = set(st.session_state.physical_examination_features)  # Get already selected features
+                
+                    if matches:
+                        for match in matches:
+                            # Show the button only if it hasn't been selected yet
+                            if match not in selected_features:
+                                if st.button(match, key=f"button_{i}_{match}"):
+                                    st.session_state.physical_examination_features[i] = match  # Set selected feature
+                                    st.rerun() 
         for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
             with col:
                 # Safely get dropdown default value
