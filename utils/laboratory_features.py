@@ -12,6 +12,16 @@ def read_diagnoses_from_file():
         st.error(f"Error reading dx_list.txt: {e}")
         return []
 
+# Function to read laboratory features from a file
+def read_laboratory_features_from_file():
+    try:
+        with open('lab_f.txt', 'r') as file:
+            features = [line.strip() for line in file.readlines() if line.strip()]
+        return features
+    except Exception as e:
+        st.error(f"Error reading lab_f.txt: {e}")
+        return []
+
 def load_laboratory_features(db, document_id):
     """Load existing laboratory features and diagnoses from Firebase."""
     collection_name = st.secrets["FIREBASE_COLLECTION_NAME"]
@@ -137,7 +147,7 @@ def display_laboratory_features(db, document_id):
     # Submit button for laboratory features
     if st.button("Submit", key="lab_features_submit_button"):
         # Ensure at least one laboratory feature is provided
-        if not any(st.session_state.laboratory_features):
+        if not any(feature.strip() for feature in st.session_state.laboratory_features):
             st.error("Please enter at least one laboratory feature.")
         else:
             assessments = {}
@@ -166,6 +176,3 @@ def display_laboratory_features(db, document_id):
             st.success("Laboratory features submitted successfully.")
             st.rerun()  # Rerun to update the app
 
-# Call the function to run the app
-# This would normally be placed in your main entry point
-# display_laboratory_features(db, document_id)
