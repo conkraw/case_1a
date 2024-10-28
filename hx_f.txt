@@ -1,2 +1,8 @@
-historical feature1
-historical feature2
+Patient is having unprotected sex
+Patient is having pruritus
+Completed course of antibiotics for bronchitis
+No fevers or chills
+No abdominal or pelvic pain
+There is dysuria and dysparenunia, but no abnormal bleeding
+Last menstrual period was 2 weeks ago. 
+Previous ITOP (intentional termination of pregnancy) at age 16. 
