@@ -53,8 +53,6 @@ def display_laboratory_features(db, document_id):
         st.session_state.diagnoses_s7 = [""] * 5  
     if 'laboratory_features' not in st.session_state:
         st.session_state.laboratory_features, st.session_state.dropdown_defaults, st.session_state.diagnoses_s7 = load_laboratory_features(db, document_id)
-    if 'selected_buttons' not in st.session_state:
-        st.session_state.selected_buttons = [False] * 5  
     if 'selected_moving_diagnosis' not in st.session_state:
         st.session_state.selected_moving_diagnosis = ""  
 
@@ -170,32 +168,33 @@ def display_laboratory_features(db, document_id):
 
     # Submit button for laboratory features
     if st.button("Submit", key="lab_features_submit_button"):
-        # Ensure at least one laboratory feature is provided
+        # Check if at least one physical examination feature is entered
         if not any(st.session_state.laboratory_features):
-            st.error("Please enter at least one laboratory feature.")
+            st.error("Please enter at least one laboratory or radiological feature.")
         else:
-            entry = {
-                'assessments': assessments,
-                'diagnoses_s7': st.session_state.diagnoses_s7
-            }
-            
-            assessments = {}
+            laboratory_features = {}
             for i in range(5):
                 for diagnosis in st.session_state.diagnoses:
                     assessment = st.session_state[f"select_{i}_{diagnosis}_lab"]
-                    if diagnosis not in assessments:
-                        assessments[diagnosis] = []
-                    assessments[diagnosis].append({
-                        'laboratory_feature': st.session_state.laboratory_features[i],
+                    if diagnosis not in laboratory_features:
+                        laboratory_features[diagnosis] = []
+                    laboratory_features[diagnosis].append({
+                        'laboratory_features': st.session_state.laboratory_features[i],
                         'assessment': assessment
                     })
             
-            session_data = collect_session_data()
+            # Always update diagnoses_s7 to the current state of diagnoses
+            st.session_state.diagnoses_s7 = [dx for dx in st.session_state.diagnoses if dx]
+
+            entry = {
+                'laboratory_features': laboratory_features,
+                'diagnoses_s7': st.session_state.diagnoses_s7
+            }
+
             # Upload to Firebase using the current diagnosis order
             upload_message = upload_to_firebase(db, document_id, entry)
             
             st.session_state.page = "Simple Success"  # Change to the next page
-            st.success("Laboratory features submitted successfully.")
+            st.success("Physical examination features submitted successfully.")
             st.rerun()  # Rerun to update the app
-
 
