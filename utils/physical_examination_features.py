@@ -12,14 +12,14 @@ def read_diagnoses_from_file():
         st.error(f"Error reading dx_list.txt: {e}")
         return []
 
-# Function to read physical examination features from a file
-def read_physical_examination_features_from_file():
+# Function to read historical features from a file
+def read_physical_features_from_file():
     try:
-        with open('pe_f.txt', 'r') as file:
+        with open('pe_f.txt', 'r') as file:  # Assuming 'pe_list.txt' for physical exam features
             features = [line.strip() for line in file.readlines() if line.strip()]
         return features
     except Exception as e:
-        st.error(f"Error reading pe_f.txt: {e}")
+        st.error(f"Error reading pe_list.txt: {e}")
         return []
 
 def load_physical_examination_features(db, document_id):
@@ -61,22 +61,19 @@ def display_physical_examination_features(db, document_id):
     dx_options.insert(0, "")  
 
     st.title("Physical Examination Illness Script")
-    st.markdown("""
-            ### Physical Examination Features
+    st.markdown("""### Physical Examination Features
             Please provide up to 5 physical examination features that influence the differential diagnosis.
         """)
     
     # Reorder section in the sidebar
     with st.sidebar:
         st.subheader("Reorder Diagnoses")
-
         selected_diagnosis = st.selectbox(
             "Select a diagnosis to move",
             options=st.session_state.diagnoses,
             index=st.session_state.diagnoses.index(st.session_state.selected_moving_diagnosis) if st.session_state.selected_moving_diagnosis in st.session_state.diagnoses else 0,
             key="move_diagnosis"
         )
-
         move_direction = st.radio("Adjust Priority:", options=["Higher Priority", "Lower Priority"], key="move_direction")
 
         if st.button("Adjust Priority"):
@@ -102,7 +99,6 @@ def display_physical_examination_features(db, document_id):
             options=st.session_state.diagnoses,
             key="change_diagnosis"
         )
-
         new_diagnosis_search = st.text_input("Search for a new diagnosis", "")
         if new_diagnosis_search:
             new_filtered_options = [dx for dx in dx_options if new_diagnosis_search.lower() in dx.lower() and dx not in st.session_state.diagnoses]
@@ -130,7 +126,7 @@ def display_physical_examination_features(db, document_id):
             # Prefill with existing values from session state
             st.session_state.physical_examination_features[i] = st.text_input(
                 f"Feature {i + 1}",
-                value=st.session_state.physical_examination_features[i],  # Prefill with existing value
+                value=st.session_state.physical_examination_features[i],
                 key=f"phys_row_{i}",
                 label_visibility="collapsed"
             )
@@ -152,8 +148,8 @@ def display_physical_examination_features(db, document_id):
     # Submit button for physical examination features
     if st.button("Submit", key="pe_features_submit_button"):
         # Check if at least one physical examination feature is entered
-        if not any(feature for feature in st.session_state.physical_examination_features if feature.strip()):
-            st.error("Please enter at least one physical examination feature to proceed.")
+        if not any(st.session_state.physical_examination_features):
+            st.error("Please enter at least one physical examination feature.")
         else:
             pefeatures = {}
             for i in range(5):
