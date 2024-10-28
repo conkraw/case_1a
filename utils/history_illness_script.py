@@ -143,26 +143,15 @@ def main(db, document_id):
                     filtered_options = [feature for feature in all_features if historical_input.lower() in feature.lower()]
                     
                     if filtered_options:
-                        st.write("**Suggestions:**")
                         for option in filtered_options:
                             if st.button(option, key=f"button_{i}_{option}"):
                                 st.session_state.historical_features[i] = option  # Set selected feature
                                 st.rerun()  # Rerun to update the input field
 
+            # Hide suggestions and current feature text when a historical feature is selected
+            if st.session_state.historical_features[i] == "":
                 # Display the current historical feature
                 st.write("Current Feature:", st.session_state.historical_features[i])
-
-            for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
-                with col:
-                    dropdown_value = st.session_state.dropdown_defaults.get(diagnosis, [""] * 5)[i]
-                    index = ["", "Supports", "Does not support"].index(dropdown_value) if dropdown_value in ["", "Supports", "Does not support"] else 0
-                    st.selectbox(
-                        "hxfeatures for " + diagnosis,
-                        options=["", "Supports", "Does not support"],
-                        index=index,
-                        key=f"select_{i}_{diagnosis}_hist",
-                        label_visibility="collapsed"
-                    )
 
         # Submit button for historical features
         if st.button("Submit", key="hx_features_submit_button"):
@@ -192,6 +181,4 @@ def main(db, document_id):
                 st.session_state.page = "Physical Examination Features"
                 st.success("Historical features submitted successfully.")
                 st.rerun()  
-
-
 
