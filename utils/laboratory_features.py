@@ -43,7 +43,6 @@ def load_laboratory_features(db, document_id):
         return laboratory_features, dropdown_defaults, diagnoses_s7
     else:
         return [""] * 5, {}, []  # Default to empty if no data
-
 def display_laboratory_features(db, document_id):
     # Initialize session state
     if 'current_page' not in st.session_state:
@@ -53,16 +52,11 @@ def display_laboratory_features(db, document_id):
     if 'diagnoses_s7' not in st.session_state:  
         st.session_state.diagnoses_s7 = [""] * 5  
     if 'laboratory_features' not in st.session_state:
-        st.session_state.laboratory_features, st.session_state.dropdown_defaults, st.session_state.diagnoses_s7 = load_laboratory_features(db, document_id)
+        st.session_state.laboratory_features, st.session_state.dropdown_defaults = load_laboratory_features(db, document_id)
     if 'selected_buttons' not in st.session_state:
         st.session_state.selected_buttons = [False] * 5  
     if 'selected_moving_diagnosis' not in st.session_state:
         st.session_state.selected_moving_diagnosis = ""  
-
-    # Load diagnoses and laboratory features from files
-    dx_options = read_diagnoses_from_file()
-    lab_feature_options = read_laboratory_features_from_file()
-    dx_options.insert(0, "")  
 
     st.title("Laboratory Features Illness Script")
     st.markdown("""
@@ -105,16 +99,20 @@ def display_laboratory_features(db, document_id):
         )
 
         new_diagnosis_search = st.text_input("Search for a new diagnosis", "")
-        if new_diagnosis_search:
-            new_filtered_options = [dx for dx in dx_options if new_diagnosis_search.lower() in dx.lower() and dx not in st.session_state.diagnoses]
-            if new_filtered_options:
-                st.write("**Available Options:**")
-                for option in new_filtered_options:
-                    if st.button(f"{option}", key=f"select_new_{option}"):
-                        index_to_change = st.session_state.diagnoses.index(change_diagnosis)
-                        st.session_state.diagnoses[index_to_change] = option
-                        st.rerun()  
-
+            if new_diagnosis_search:
+                dx_options = read_diagnoses_from_file()  # Re-read the diagnoses options
+                new_filtered_options = [dx for dx in dx_options if new_diagnosis_search.lower() in dx.lower() and dx not in st.session_state.diagnoses]
+                if new_filtered_options:
+                    st.write("**Available Options:**")
+                    for option in new_filtered_options:
+                        if st.button(f"{option}", key=f"select_new_{option}"):
+                            index_to_change = st.session_state.diagnoses.index(change_diagnosis)
+                            st.session_state.diagnoses[index_to_change] = option
+                            # Update diagnoses_s2 here as well
+                            st.session_state.diagnoses_s7 = [dx for dx in st.session_state.diagnoses if dx]  # Update diagnoses_s2
+                            st.rerun()  
+        st.session_state.diagnoses_s7 = [dx for dx in st.session_state.diagnoses if dx]
+        
     # Display laboratory features
     cols = st.columns(len(st.session_state.diagnoses) + 1)
     with cols[0]:
@@ -134,29 +132,41 @@ def display_laboratory_features(db, document_id):
                 key=f"lab_search_{i}",
                 label_visibility="collapsed"
             )
-
+            st.session_state.laboratory_features[i] = feature_search_input.strip()
             # Show matching buttons for laboratory features
+
+                            
             if feature_search_input:
-                matches = [feature for feature in lab_feature_options if feature_search_input.lower() in feature.lower()]
-                if matches:
-                    for match in matches:
-                        if st.button(match, key=f"button_{i}_{match}"):
-                            st.session_state.laboratory_features[i] = match
-                            st.rerun()  # Rerun to refresh the app state
-
+                    available_features = read_laboratory_features_from_file()
+                    matches = [feature for feature in available_features if feature_search_input.lower() in feature.lower()]
+                    selected_features = set(st.session_state.laboratory_features)  # Get already selected features
+                
+                    if matches:
+                        for match in matches:
+                            # Show the button only if it hasn't been selected yet
+                            if match not in selected_features:
+                                if st.button(match, key=f"button_{i}_{match}"):
+                                    st.session_state.laboratory_features[i] = match  # Set selected feature
+                                    st.rerun() 
+                                    
         for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
-            with col:
-                # Safely get dropdown default value
-                dropdown_value = st.session_state.dropdown_defaults.get(diagnosis, [""] * 5)[i]
-                index = ["", "Supports", "Does not support"].index(dropdown_value) if dropdown_value in ["", "Supports", "Does not support"] else 0
+                with col:
+                    # Safely retrieve the dropdown default value
+                    dropdown_value = st.session_state.dropdown_defaults.get(diagnosis, [""] * 5)[i]
+                    # Check if dropdown_value is in the list before accessing the index
+                    if dropdown_value in ["", "Supports", "Does not support"]:
+                        index = ["", "Supports", "Does not support"].index(dropdown_value)
+                    else:
+                        index = 0  # Default to the first option
 
-                st.selectbox(
-                    "Assessment for " + diagnosis,
-                    options=["", "Supports", "Does not support"],
-                    index=index,
-                    key=f"select_{i}_{diagnosis}_lab",
-                    label_visibility="collapsed"
-                )
+                    # Render the dropdown with the correct index selected
+                    st.selectbox(
+                        "laboratory_features for " + diagnosis,
+                        options=["", "Supports", "Does not support"],
+                        index=index,
+                        key=f"select_{i}_{diagnosis}_lab",
+                        label_visibility="collapsed"
+                    )
 
     # Submit button for laboratory features
     if st.button("Submit", key="lab_features_submit_button"):
@@ -164,6 +174,11 @@ def display_laboratory_features(db, document_id):
         if not any(st.session_state.laboratory_features):
             st.error("Please enter at least one laboratory feature.")
         else:
+            entry = {
+                'assessments': assessments,
+                'diagnoses_s7': st.session_state.diagnoses_s7
+            }
+            
             assessments = {}
             for i in range(5):
                 for diagnosis in st.session_state.diagnoses:
@@ -175,14 +190,7 @@ def display_laboratory_features(db, document_id):
                         'assessment': assessment
                     })
             
-            # Update diagnoses_s7 to the current state of diagnoses
-            st.session_state.diagnoses_s7 = [dx for dx in st.session_state.diagnoses if dx]
-
-            entry = {
-                'assessments': assessments,
-                'diagnoses_s7': st.session_state.diagnoses_s7
-            }
-
+            session_data = collect_session_data()
             # Upload to Firebase using the current diagnosis order
             upload_message = upload_to_firebase(db, document_id, entry)
             
@@ -190,7 +198,4 @@ def display_laboratory_features(db, document_id):
             st.success("Laboratory features submitted successfully.")
             st.rerun()  # Rerun to update the app
 
-# Call the function to run the app
-# This would normally be placed in your main entry point
-# display_laboratory_features(db, document_id)
 
