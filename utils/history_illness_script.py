@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.session_management import collect_session_data  #######NEED THIS
+from utils.session_management import collect_session_data
 from utils.firebase_operations import upload_to_firebase  
 
 # Function to read diagnoses from a file
@@ -10,6 +10,16 @@ def read_diagnoses_from_file():
         return diagnoses
     except Exception as e:
         st.error(f"Error reading dx_list.txt: {e}")
+        return []
+
+# Function to read historical features from a file
+def read_historical_features_from_file():
+    try:
+        with open('hx_f.txt', 'r') as file:
+            features = [line.strip() for line in file.readlines() if line.strip()]
+        return features
+    except Exception as e:
+        st.error(f"Error reading hx_f.txt: {e}")
         return []
 
 def load_historical_features(db, document_id):
@@ -124,12 +134,22 @@ def main(db, document_id):
             cols = st.columns(len(st.session_state.diagnoses) + 1)
             with cols[0]:
                 # Populate text input with existing value from session state
-                st.session_state.historical_features[i] = st.text_input(
+                historical_feature_input = st.text_input(
                     f"Feature {i + 1}",
                     value=st.session_state.historical_features[i],
                     key=f"hist_row_{i}",
                     label_visibility="collapsed"
                 )
+
+                # Show buttons if there is input in the search field
+                if historical_feature_input:
+                    available_features = read_historical_features_from_file()
+                    matches = [feature for feature in available_features if historical_feature_input.lower() in feature.lower()]
+                    if matches:
+                        for match in matches:
+                            if st.button(match, key=f"button_{i}_{match}"):
+                                st.session_state.historical_features[i] = match  # Set selected feature
+                                st.rerun()  # Rerun to refresh the app state
 
             for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
                 with col:
@@ -156,21 +176,21 @@ def main(db, document_id):
                 st.error("Please enter at least one historical feature.")
             else:
                 entry = {
-                    'hxfeatures': {},  # Changed from 'assessments'
+                    'hxfeatures': {},
                     'diagnoses_s2': st.session_state.diagnoses_s2  # Include the reordered diagnoses here
                 }
 
                 # Make sure to capture hxfeatures in the current order of diagnoses
-                hxfeatures = {}  # Changed from assessments
+                hxfeatures = {}
                 for i in range(5):
                     for diagnosis in st.session_state.diagnoses:
-                        hxfeature = st.session_state[f"select_{i}_{diagnosis}_hist"]  # Changed from assessment
-                        if diagnosis not in entry['hxfeatures']:  # Changed from assessments
-                            entry['hxfeatures'][diagnosis] = []  # Changed from assessments
+                        hxfeature = st.session_state[f"select_{i}_{diagnosis}_hist"]
+                        if diagnosis not in entry['hxfeatures']:
+                            entry['hxfeatures'][diagnosis] = []
                         # Create a structured entry with historical feature and its hxfeature
-                        entry['hxfeatures'][diagnosis].append({  # Changed from assessments
+                        entry['hxfeatures'][diagnosis].append({
                             'historical_feature': st.session_state.historical_features[i],
-                            'hxfeature': hxfeature  # Changed from assessment
+                            'hxfeature': hxfeature
                         })
                 
                 session_data = collect_session_data()  # Collect session data
@@ -178,6 +198,9 @@ def main(db, document_id):
                 # Upload to Firebase using the current diagnosis order
                 upload_message = upload_to_firebase(db, document_id, entry)
                 
-                st.session_state.page = "Physical Examination Features"  # Change to the Simple Success page
+                st.session_state.page = "Physical Examination Features"  # Change to the next page
                 st.success("Historical features submitted successfully.")
                 st.rerun()  # Rerun to update the app
+
+# Call the main function
+# main(db, document_id)  # Uncomment and replace with actual parameters
