@@ -211,6 +211,7 @@ def main(db, document_id):
         
                 session_data = collect_session_data()  # Collect session data
                 upload_message = upload_to_firebase(db, document_id, entry)
+                st.session_state.page = "Physical Examination Features" 
                 st.success("Historical features submitted successfully.")
                 st.rerun()  # Rerun to update the app
 
