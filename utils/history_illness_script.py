@@ -212,6 +212,5 @@ def main(db, document_id):
                 session_data = collect_session_data()  # Collect session data
                 upload_message = upload_to_firebase(db, document_id, entry)
                 st.success("Historical features submitted successfully.")
-                s#t.session_state.current_page = "Next Page"  # Change this to the next page
                 st.rerun()  # Rerun to update the app
 
