@@ -47,6 +47,10 @@ def display_diagnoses(db, document_id):
             if not filtered_options and search_input:
                 st.warning("Please select a diagnosis from the suggestions. If there are no suggestions, please alter your search and try again.")
 
+            # Handle deletion of a diagnosis
+            if search_input == "" and current_diagnosis:
+                st.session_state.diagnoses[i] = ""  # Revert to blank if deleted
+
             # Update the diagnoses in session state for persistence
             if current_diagnosis and current_diagnosis in dx_options:
                 st.session_state.diagnoses[i] = current_diagnosis
@@ -78,4 +82,3 @@ def display_diagnoses(db, document_id):
                 st.error("Please do not provide duplicate diagnoses.")
         else:
             st.error("Please select all 5 diagnoses.")
-
