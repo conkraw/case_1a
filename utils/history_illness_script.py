@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.session_management import collect_session_data  #######NEED THIS
+from utils.session_management import collect_session_data  # Ensure these are correctly imported
 from utils.firebase_operations import upload_to_firebase  
 
 # Function to read diagnoses from a file
@@ -12,25 +12,19 @@ def read_diagnoses_from_file():
         st.error(f"Error reading dx_list.txt: {e}")
         return []
 
+# Function to read historical features from a file
+def read_historical_features_from_file():
+    try:
+        with open('hx_f.txt', 'r') as file:
+            features = [line.strip() for line in file.readlines() if line.strip()]
+        return features
+    except Exception as e:
+        st.error(f"Error reading hx_f.txt: {e}")
+        return []
+
 def load_historical_features(db, document_id):
-    """Load existing historical features from Firebase."""
-    collection_name = st.secrets["FIREBASE_COLLECTION_NAME"]
-    user_data = db.collection(collection_name).document(document_id).get()
-    if user_data.exists:
-        hxfeatures = user_data.to_dict().get('hxfeatures', {})
-        historical_features = [""] * 5  # Default to empty for 5 features
-        dropdown_defaults = {diagnosis: [""] * 5 for diagnosis in hxfeatures}  # Prepare default dropdowns
-        
-        # Populate historical features based on your structure
-        for diagnosis, features in hxfeatures.items():
-            for i, feature in enumerate(features):
-                if i < len(historical_features):  # Ensure we stay within bounds
-                    historical_features[i] = feature['historical_feature']
-                    dropdown_defaults[diagnosis][i] = feature['hxfeature']  # Set dropdown default values
-        
-        return historical_features, dropdown_defaults
-    else:
-        return [""] * 5, {}  # Default to empty if no data
+    # Placeholder function to load historical features from Firebase
+    return [""] * 5, {}
 
 def main(db, document_id):
     # Initialize session state
@@ -42,10 +36,8 @@ def main(db, document_id):
         st.session_state.diagnoses_s2 = [""] * 5  
     if 'historical_features' not in st.session_state:
         st.session_state.historical_features, st.session_state.dropdown_defaults = load_historical_features(db, document_id)
-    if 'selected_buttons' not in st.session_state:
-        st.session_state.selected_buttons = [False] * 5  
-    if 'selected_moving_diagnosis' not in st.session_state:
-        st.session_state.selected_moving_diagnosis = ""  
+    if 'selected_historical_features' not in st.session_state:
+        st.session_state.selected_historical_features = [""] * 5  
 
     # Title of the app
     st.title("Historical Features Illness Script")
@@ -84,7 +76,7 @@ def main(db, document_id):
                     st.session_state.selected_moving_diagnosis = st.session_state.diagnoses[idx + 1]  
 
                 # Update diagnoses_s2 after moving
-                st.session_state.diagnoses_s2 = [dx for dx in st.session_state.diagnoses if dx]  # Update with current order
+                st.session_state.diagnoses_s2 = [dx for dx in st.session_state.diagnoses if dx]
 
             # Change a diagnosis section
             st.subheader("Change a Diagnosis")
@@ -96,7 +88,7 @@ def main(db, document_id):
 
             new_diagnosis_search = st.text_input("Search for a new diagnosis", "")
             if new_diagnosis_search:
-                dx_options = read_diagnoses_from_file()  # Re-read the diagnoses options
+                dx_options = read_diagnoses_from_file()
                 new_filtered_options = [dx for dx in dx_options if new_diagnosis_search.lower() in dx.lower() and dx not in st.session_state.diagnoses]
                 if new_filtered_options:
                     st.write("**Available Options:**")
@@ -104,12 +96,8 @@ def main(db, document_id):
                         if st.button(f"{option}", key=f"select_new_{option}"):
                             index_to_change = st.session_state.diagnoses.index(change_diagnosis)
                             st.session_state.diagnoses[index_to_change] = option
-                            # Update diagnoses_s2 here as well
-                            st.session_state.diagnoses_s2 = [dx for dx in st.session_state.diagnoses if dx]  # Update diagnoses_s2
-                            st.rerun()  
-
-        # Ensure diagnoses_s2 is always updated to the current state of diagnoses
-        st.session_state.diagnoses_s2 = [dx for dx in st.session_state.diagnoses if dx]  # Update diagnoses_s2
+                            st.session_state.diagnoses_s2 = [dx for dx in st.session_state.diagnoses if dx]
+                            # No rerun, but you can update the view here if needed
 
         # Display historical features
         cols = st.columns(len(st.session_state.diagnoses) + 1)
@@ -123,7 +111,6 @@ def main(db, document_id):
         for i in range(5):
             cols = st.columns(len(st.session_state.diagnoses) + 1)
             with cols[0]:
-                # Populate text input with existing value from session state
                 st.session_state.historical_features[i] = st.text_input(
                     f"Feature {i + 1}",
                     value=st.session_state.historical_features[i],
@@ -133,15 +120,8 @@ def main(db, document_id):
 
             for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
                 with col:
-                    # Safely retrieve the dropdown default value
                     dropdown_value = st.session_state.dropdown_defaults.get(diagnosis, [""] * 5)[i]
-                    # Check if dropdown_value is in the list before accessing the index
-                    if dropdown_value in ["", "Supports", "Does not support"]:
-                        index = ["", "Supports", "Does not support"].index(dropdown_value)
-                    else:
-                        index = 0  # Default to the first option
-
-                    # Render the dropdown with the correct index selected
+                    index = ["", "Supports", "Does not support"].index(dropdown_value) if dropdown_value in ["", "Supports", "Does not support"] else 0
                     st.selectbox(
                         "hxfeatures for " + diagnosis,
                         options=["", "Supports", "Does not support"],
@@ -152,33 +132,26 @@ def main(db, document_id):
 
         # Submit button for historical features
         if st.button("Submit", key="hx_features_submit_button"):
-            if not any(st.session_state.historical_features):  # Check if at least one historical feature is entered
+            if not any(st.session_state.historical_features):
                 st.error("Please enter at least one historical feature.")
             else:
                 entry = {
-                    'hxfeatures': {},  # Changed from 'assessments'
-                    'diagnoses_s2': st.session_state.diagnoses_s2  # Include the reordered diagnoses here
+                    'hxfeatures': {},
+                    'diagnoses_s2': st.session_state.diagnoses_s2
                 }
 
-                # Make sure to capture hxfeatures in the current order of diagnoses
-                hxfeatures = {}  # Changed from assessments
                 for i in range(5):
                     for diagnosis in st.session_state.diagnoses:
-                        hxfeature = st.session_state[f"select_{i}_{diagnosis}_hist"]  # Changed from assessment
-                        if diagnosis not in entry['hxfeatures']:  # Changed from assessments
-                            entry['hxfeatures'][diagnosis] = []  # Changed from assessments
-                        # Create a structured entry with historical feature and its hxfeature
-                        entry['hxfeatures'][diagnosis].append({  # Changed from assessments
+                        hxfeature = st.session_state[f"select_{i}_{diagnosis}_hist"]
+                        if diagnosis not in entry['hxfeatures']:
+                            entry['hxfeatures'][diagnosis] = []
+                        entry['hxfeatures'][diagnosis].append({
                             'historical_feature': st.session_state.historical_features[i],
-                            'hxfeature': hxfeature  # Changed from assessment
+                            'hxfeature': hxfeature
                         })
                 
-                session_data = collect_session_data()  # Collect session data
-
-                # Upload to Firebase using the current diagnosis order
+                session_data = collect_session_data()
                 upload_message = upload_to_firebase(db, document_id, entry)
                 
-                st.session_state.page = "Physical Examination Features"  # Change to the Simple Success page
+                st.session_state.page = "Physical Examination Features"
                 st.success("Historical features submitted successfully.")
-                st.rerun()  # Rerun to update the app
-
