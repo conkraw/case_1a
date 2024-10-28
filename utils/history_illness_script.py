@@ -144,11 +144,13 @@ def main(db, document_id):
                     
                     if filtered_options:
                         st.write("**Suggestions:**")
-                        selected_feature = st.selectbox("Select a feature", options=filtered_options, index=0, key=f"feature_select_{i}")
-                        historical_input = selected_feature  # Update historical_input with selected feature
+                        for option in filtered_options:
+                            if st.button(option, key=f"button_{i}_{option}"):
+                                st.session_state.historical_features[i] = option  # Set selected feature
+                                st.experimental_rerun()  # Rerun to update the input field
 
-                # Store the final historical feature in session state
-                st.session_state.historical_features[i] = historical_input
+                # Display the current historical feature
+                st.write("Current Feature:", st.session_state.historical_features[i])
 
             for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
                 with col:
@@ -190,5 +192,6 @@ def main(db, document_id):
                 st.session_state.page = "Physical Examination Features"
                 st.success("Historical features submitted successfully.")
                 st.rerun()  
+
 
 
