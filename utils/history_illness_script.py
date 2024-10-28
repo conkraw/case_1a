@@ -147,7 +147,7 @@ def main(db, document_id):
                         for option in filtered_options:
                             if st.button(option, key=f"button_{i}_{option}"):
                                 st.session_state.historical_features[i] = option  # Set selected feature
-                                st.experimental_rerun()  # Rerun to update the input field
+                                st.rerun()  # Rerun to update the input field
 
                 # Display the current historical feature
                 st.write("Current Feature:", st.session_state.historical_features[i])
