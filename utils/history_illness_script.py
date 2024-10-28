@@ -28,7 +28,7 @@ def load_historical_features(db, document_id):
     user_data = db.collection(collection_name).document(document_id).get()
     if user_data.exists:
         hxfeatures = user_data.to_dict().get('hxfeatures', {})
-        historical_features = [""] * 5  # Default to empty for 5 features
+        historical_features = [""] * 5
         dropdown_defaults = {diagnosis: [""] * 5 for diagnosis in hxfeatures}
         
         for diagnosis, features in hxfeatures.items():
@@ -113,7 +113,7 @@ def main(db, document_id):
                             index_to_change = st.session_state.diagnoses.index(change_diagnosis)
                             st.session_state.diagnoses[index_to_change] = option
                             st.session_state.diagnoses_s2 = [dx for dx in st.session_state.diagnoses if dx]
-                            st.rerun()  
+                            st.rerun()  # Rerun to reflect changes
 
         st.session_state.diagnoses_s2 = [dx for dx in st.session_state.diagnoses if dx]
 
@@ -141,16 +141,27 @@ def main(db, document_id):
                 if historical_input:
                     all_features = read_historical_features_from_file()
                     filtered_options = [feature for feature in all_features if historical_input.lower() in feature.lower()]
-                    
+
                     if filtered_options:
+                        st.write("**Suggestions:**")
                         for option in filtered_options:
                             if st.button(option, key=f"button_{i}_{option}"):
                                 st.session_state.historical_features[i] = option  # Set selected feature
-                                st.rerun()  # Rerun to update the input field
+                                # Don't rerun the entire app; just refresh the input field
+                                st.session_state.historical_features[i] = option
 
-            # Hide suggestions and current feature text when a historical feature is selected
-            if st.session_state.historical_features[i] == "":
-                # Display the current historical feature
+            # Show dropdown for hxfeature if historical feature is not empty
+            if st.session_state.historical_features[i]:
+                # Render the dropdown with historical feature
+                dropdown_value = st.session_state.dropdown_defaults.get(diagnosis, [""] * 5)[i]
+                st.selectbox(
+                    "hxfeatures for " + diagnosis,
+                    options=["", "Supports", "Does not support"],
+                    index=["", "Supports", "Does not support"].index(dropdown_value),
+                    key=f"select_{i}_{diagnosis}_hist",
+                    label_visibility="collapsed"
+                )
+            else:
                 st.write("Current Feature:", st.session_state.historical_features[i])
 
         # Submit button for historical features
@@ -181,4 +192,5 @@ def main(db, document_id):
                 st.session_state.page = "Physical Examination Features"
                 st.success("Historical features submitted successfully.")
                 st.rerun()  
+
 
