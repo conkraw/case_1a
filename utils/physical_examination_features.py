@@ -124,7 +124,7 @@ def display_physical_examination_features(db, document_id):
         cols = st.columns(len(st.session_state.diagnoses) + 1)
         with cols[0]:
             # Prefill with existing values from session state
-            st.session_state.physical_examination_features[i] = st.text_input(
+            physical_examination_input = st.text_input(
                 f"Feature {i + 1}",
                 value=st.session_state.physical_examination_features[i],
                 key=f"phys_row_{i}",
