@@ -145,11 +145,18 @@ def main(db, document_id):
                 if historical_feature_input:
                     available_features = read_historical_features_from_file()
                     matches = [feature for feature in available_features if historical_feature_input.lower() in feature.lower()]
+                    #if matches:
+                    #    for match in matches:
+                    #        if st.button(match, key=f"button_{i}_{match}"):
+                    #            st.session_state.historical_features[i] = match  # Set selected feature
+                    #            st.rerun()  # Rerun to refresh the app state
                     if matches:
                         for match in matches:
-                            if st.button(match, key=f"button_{i}_{match}"):
-                                st.session_state.historical_features[i] = match  # Set selected feature
-                                st.rerun()  # Rerun to refresh the app state
+                            # Only show the button if it hasn't been selected yet
+                            if match != st.session_state.historical_features[i]:
+                                if st.button(match, key=f"button_{i}_{match}"):
+                                    st.session_state.historical_features[i] = match  # Set selected feature
+                                    st.rerun()  # Rerun to refresh the app state
 
             for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
                 with col:
@@ -202,5 +209,3 @@ def main(db, document_id):
                 st.success("Historical features submitted successfully.")
                 st.rerun()  # Rerun to update the app
 
-# Call the main function
-# main(db, document_id)  # Uncomment and replace with actual parameters
