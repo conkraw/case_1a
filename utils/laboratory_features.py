@@ -99,9 +99,9 @@ def display_laboratory_features(db, document_id):
         )
 
         new_diagnosis_search = st.text_input("Search for a new diagnosis", "")
-            if new_diagnosis_search:
-                dx_options = read_diagnoses_from_file()  # Re-read the diagnoses options
-                new_filtered_options = [dx for dx in dx_options if new_diagnosis_search.lower() in dx.lower() and dx not in st.session_state.diagnoses]
+        if new_diagnosis_search:
+            dx_options = read_diagnoses_from_file()  # Re-read the diagnoses options
+            new_filtered_options = [dx for dx in dx_options if new_diagnosis_search.lower() in dx.lower() and dx not in st.session_state.diagnoses]
                 if new_filtered_options:
                     st.write("**Available Options:**")
                     for option in new_filtered_options:
