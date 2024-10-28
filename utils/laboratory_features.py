@@ -52,7 +52,7 @@ def display_laboratory_features(db, document_id):
     if 'diagnoses_s7' not in st.session_state:  
         st.session_state.diagnoses_s7 = [""] * 5  
     if 'laboratory_features' not in st.session_state:
-        st.session_state.laboratory_features, st.session_state.dropdown_defaults = load_laboratory_features(db, document_id)
+        st.session_state.laboratory_features, st.session_state.dropdown_defaults, st.session_state.diagnoses_s7 = load_laboratory_features(db, document_id)
     if 'selected_buttons' not in st.session_state:
         st.session_state.selected_buttons = [False] * 5  
     if 'selected_moving_diagnosis' not in st.session_state:
