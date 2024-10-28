@@ -189,32 +189,33 @@ def main(db, document_id):
                     )
         
         # Submit button for historical features
-            if st.button("Submit", key="hx_features_submit_button"):
-                if not any(st.session_state.historical_features):  # Check if at least one historical feature is entered
-                    st.error("Please enter at least one historical feature.")
-                else:
-                    entry = {
-                        'hxfeatures': {},  # Changed from 'assessments'
-                        'diagnoses_s2': st.session_state.diagnoses_s2  # Include the reordered diagnoses here
-                    }
-    
-                    # Make sure to capture hxfeatures in the current order of diagnoses
-                    hxfeatures = {}  # Changed from assessments
-                    for i in range(5):
-                        for diagnosis in st.session_state.diagnoses:
-                            hxfeature = st.session_state[f"select_{i}_{diagnosis}_hist"]  # Changed from assessment
-                            if diagnosis not in entry['hxfeatures']:  # Changed from assessments
-                                entry['hxfeatures'][diagnosis] = []  # Changed from assessments
-                            # Create a structured entry with historical feature and its hxfeature
-                            entry['hxfeatures'][diagnosis].append({  # Changed from assessments
-                                'historical_feature': st.session_state.historical_features[i],
-                                'hxfeature': hxfeature  # Changed from assessment
-                            })
-                    
-                    session_data = collect_session_data()  # Collect session data
-    
-                    # Upload to Firebase using the current diagnosis order
-                    upload_message = upload_to_firebase(db, document_id, entry)
+        if st.button("Submit", key="hx_features_submit_button"):
+            # Check if at least one historical feature is filled
+            if not any(feature.strip() for feature in st.session_state.historical_features):  
+                st.error("Please enter at least one historical feature to proceed.")
+            else:
+                # Proceed with collecting and uploading data
+                entry = {
+                    'hxfeatures': {},
+                    'diagnoses_s2': st.session_state.diagnoses_s2
+                }
+                
+                for i in range(5):
+                    for diagnosis in st.session_state.diagnoses:
+                        hxfeature = st.session_state[f"select_{i}_{diagnosis}_hist"]
+                        if diagnosis not in entry['hxfeatures']:
+                            entry['hxfeatures'][diagnosis] = []
+                        entry['hxfeatures'][diagnosis].append({
+                            'historical_feature': st.session_state.historical_features[i].strip(),  # Ensure no leading/trailing spaces
+                            'hxfeature': hxfeature
+                        })
+        
+                session_data = collect_session_data()  # Collect session data
+                upload_message = upload_to_firebase(db, document_id, entry)
+                st.success("Historical features submitted successfully.")
+                st.session_state.current_page = "Physical Examination Features"  # Change this to the next page
+                st.rerun()  # Rerun to update the app
+
                     
                     st.session_state.page = "Physical Examination Features"  # Change to the Simple Success page
                     st.success("Historical features submitted successfully.")
