@@ -190,33 +190,27 @@ def main(db, document_id):
 
         # Submit button for historical features
         if st.button("Submit", key="hx_features_submit_button"):
-            if not any(st.session_state.historical_features):  # Check if at least one historical feature is entered
+            # Check if all historical features are empty
+            if all(feature == "" for feature in st.session_state.historical_features):  
                 st.error("Please enter at least one historical feature.")
             else:
+                # Proceed with collecting and uploading data
                 entry = {
                     'hxfeatures': {},
-                    'diagnoses_s2': st.session_state.diagnoses_s2  # Include the reordered diagnoses here
+                    'diagnoses_s2': st.session_state.diagnoses_s2
                 }
-
-                # Make sure to capture hxfeatures in the current order of diagnoses
-                hxfeatures = {}
+                
                 for i in range(5):
                     for diagnosis in st.session_state.diagnoses:
                         hxfeature = st.session_state[f"select_{i}_{diagnosis}_hist"]
                         if diagnosis not in entry['hxfeatures']:
                             entry['hxfeatures'][diagnosis] = []
-                        # Create a structured entry with historical feature and its hxfeature
                         entry['hxfeatures'][diagnosis].append({
                             'historical_feature': st.session_state.historical_features[i],
                             'hxfeature': hxfeature
                         })
-                
+        
                 session_data = collect_session_data()  # Collect session data
-
-                # Upload to Firebase using the current diagnosis order
                 upload_message = upload_to_firebase(db, document_id, entry)
-                
-                st.session_state.page = "Physical Examination Features"  # Change to the next page
                 st.success("Historical features submitted successfully.")
                 st.rerun()  # Rerun to update the app
-
