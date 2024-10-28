@@ -136,37 +136,41 @@ def main(db, document_id):
                     key=f"hist_row_{i}",
                     label_visibility="collapsed"
                 )
-
+        
+                # Store selected option
+                if 'selected_historical_features' not in st.session_state:
+                    st.session_state.selected_historical_features = [""] * 5
+                
                 # If user provides input, search in hx_f.txt
                 if historical_input:
                     all_features = read_historical_features_from_file()
                     filtered_options = [feature for feature in all_features if historical_input.lower() in feature.lower()]
-
+        
                     if filtered_options:
                         st.write("**Suggestions:**")
                         for option in filtered_options:
-                            if st.button(option, key=f"button_{i}_{option}"):
-                                st.session_state.historical_features[i] = option  # Set selected feature
-                                # Clear suggestions once an option is selected
-                                filtered_options = []
-
-            for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
-                with col:
-                    # Safely retrieve the dropdown default value
-                    dropdown_value = st.session_state.dropdown_defaults.get(diagnosis, [""] * 5)[i]
-                    if dropdown_value in ["", "Supports", "Does not support"]:
-                        index = ["", "Supports", "Does not support"].index(dropdown_value)
-                    else:
-                        index = 0  
-
-                    # Render the dropdown with the correct index selected
-                    st.selectbox(
-                        "hxfeatures for " + diagnosis,
-                        options=["", "Supports", "Does not support"],
-                        index=index,
-                        key=f"select_{i}_{diagnosis}_hist",
-                        label_visibility="collapsed"
-                    )
+                            # Only show button if the feature is not already selected
+                            if st.session_state.selected_historical_features[i] == "":
+                                if st.button(option, key=f"button_{i}_{option}"):
+                                    st.session_state.historical_features[i] = option  # Set selected feature
+                                    st.session_state.selected_historical_features[i] = option  # Mark as selected
+        
+                # Show selected feature
+                if st.session_state.selected_historical_features[i] != "":
+                    st.write(f"**Current Feature:** {st.session_state.selected_historical_features[i]}")
+                else:
+                    # Render the dropdown for historical features if no selection
+                    for diagnosis, col in zip(st.session_state.diagnoses, cols[1:]):
+                        with col:
+                            dropdown_value = st.session_state.dropdown_defaults.get(diagnosis, [""] * 5)[i]
+                            index = ["", "Supports", "Does not support"].index(dropdown_value) if dropdown_value in ["", "Supports", "Does not support"] else 0
+                            st.selectbox(
+                                "hxfeatures for " + diagnosis,
+                                options=["", "Supports", "Does not support"],
+                                index=index,
+                                key=f"select_{i}_{diagnosis}_hist",
+                                label_visibility="collapsed"
+                            )
 
         # Submit button for historical features
         if st.button("Submit", key="hx_features_submit_button"):
